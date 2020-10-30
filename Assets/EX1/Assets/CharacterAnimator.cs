@@ -28,7 +28,7 @@ public class CharacterAnimator : MonoBehaviour
     // Creates a Cylinder GameObject between two given points in 3D space
     GameObject CreateCylinderBetweenPoints(Vector3 p1, Vector3 p2, float diameter)
     {
-        // Your code here
+        GameObject.CreatePrimitive(PrimitiveType.Cylinder);
         return null;
     }
 
