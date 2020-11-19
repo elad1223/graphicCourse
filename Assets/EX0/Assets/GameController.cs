@@ -6,7 +6,7 @@ public class GameController : MonoBehaviour
 {
     public static int FIELD_SIZE = 30; // Width and height of the game field
     public static float COLLISION_THRESHOLD = 1.5f; // Collision distance between food and player 
-    public GameObject playerObject, camera; // Reference to the Player GameObject
+    public GameObject playerObject, cameraGameObject; // Reference to the Player GameObject
 
     private GameObject food; // Represents the food in the game
     private int score = 0;
@@ -18,7 +18,7 @@ public class GameController : MonoBehaviour
         food = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
         foodT = food.GetComponent<Transform>();
         playerT = playerObject.GetComponent<Transform>();
-        offset =  camera.transform.position - playerObject.transform.position;
+        offset =  cameraGameObject.transform.position - playerObject.transform.position;
         SpawnFood();
     }
 
@@ -39,6 +39,6 @@ public class GameController : MonoBehaviour
             score++;
             Debug.Log(score);
         }
-        camera.transform.position = playerT.position + offset;
+        cameraGameObject.transform.position = playerT.position + offset;
     }
 }
