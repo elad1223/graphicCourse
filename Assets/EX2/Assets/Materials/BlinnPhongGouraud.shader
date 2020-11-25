@@ -37,6 +37,7 @@
                 struct v2f
                 {
                     float4 pos : SV_POSITION;
+                    fixed4 color : TEXCOORD0;
                 };
 
 
@@ -44,13 +45,37 @@
                 {
                     v2f output;
                     output.pos = UnityObjectToClipPos(input.vertex);
+
+                    // the light in our program is directional, so we can assume its constant
+                    float3 lightDirection = normalize(_WorldSpaceLightPos0);
+                    float3 surfaceNormal = normalize(mul(input.normal, unity_WorldToObject));
+                    // the position of the vertex in the world coordinates
+                    float3 worldPos = mul(unity_ObjectToWorld, input.vertex).xyz;
+                    float3 viewPoint = normalize(_WorldSpaceCameraPos - worldPos);
+                    // calculate the halfway vector used in the Blinn-Phong model
+                    float3 halfway = (lightDirection + viewPoint) / length(lightDirection + viewPoint);
+
+                    // now we will calculate the ambient, diffuse and specular vectors
+                    // that as used to get the Phong Lighting
+                    float3 ambient = _LightColor0.rgb * _AmbientColor.rgb;
+                    float3 diffuse = 
+                        max(0.0, dot(lightDirection, surfaceNormal)) * _LightColor0.rgb * _DiffuseColor.rgb;
+                    float specularReflectance;
+                    if (dot(surfaceNormal, lightDirection) < 0.0) {
+                        // meaning the light source is in the otherside, so no specals are visible
+                        specularReflectance = float3(0.0, 0.0, 0.0);
+                    }
+                    else {
+                        specularReflectance = pow(max(0.0, dot(surfaceNormal, halfway)), _Shininess);
+                    }
+                    output.color = fixed4((ambient + diffuse + specularReflectance), 1);
                     return output;
                 }
 
 
                 fixed4 frag (v2f input) : SV_Target
                 {
-                    return fixed4(0, 0, 1.0, 1.0);
+                    return input.color;
                 }
 
             ENDCG
