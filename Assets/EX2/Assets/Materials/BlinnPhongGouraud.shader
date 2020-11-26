@@ -1,4 +1,4 @@
-﻿Shader "CG/BlinnPhongGouraud"
+Shader "CG/BlinnPhongGouraud"
 {
     Properties
     {
@@ -37,7 +37,7 @@
                 struct v2f
                 {
                     float4 pos : SV_POSITION;
-                    fixed4 color : TEXCOORD0;
+                    fixed4 color : COLOR;
                 };
 
 
@@ -53,20 +53,20 @@
                     float3 worldPos = mul(unity_ObjectToWorld, input.vertex).xyz;
                     float3 viewPoint = normalize(_WorldSpaceCameraPos - worldPos);
                     // calculate the halfway vector used in the Blinn-Phong model
-                    float3 halfway = (lightDirection + viewPoint) / length(lightDirection + viewPoint);
+                    float3 halfway = normalize(lightDirection + viewPoint);
 
                     // now we will calculate the ambient, diffuse and specular vectors
                     // that as used to get the Phong Lighting
                     float3 ambient = _LightColor0.rgb * _AmbientColor.rgb;
-                    float3 diffuse = 
-                        max(0.0, dot(lightDirection, surfaceNormal)) * _LightColor0.rgb * _DiffuseColor.rgb;
-                    float specularReflectance;
-                    if (dot(surfaceNormal, lightDirection) < 0.0) {
-                        // meaning the light source is in the otherside, so no specals are visible
-                        specularReflectance = float3(0.0, 0.0, 0.0);
-                    }
-                    else {
-                        specularReflectance = pow(max(0.0, dot(surfaceNormal, halfway)), _Shininess);
+                    
+                    float lightAngle = dot(lightDirection, surfaceNormal);
+                    float3 diffuse = max(0.0, lightAngle) * _LightColor0.rgb * _DiffuseColor.rgb;
+
+                    float3 specularReflectance = float3(0.0, 0.0, 0.0);  // deafult
+                    if (lightAngle >= 0.0) {
+                        // some light is projected from the object to the viewer
+                        specularReflectance = pow(max(0.0, dot(surfaceNormal, halfway)), _Shininess)
+                            * _LightColor0.rgb * _SpecularColor.rgb;
                     }
                     output.color = fixed4((ambient + diffuse + specularReflectance), 1);
                     return output;
