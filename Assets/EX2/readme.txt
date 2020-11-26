@@ -1,6 +1,6 @@
             Readme for project 2 - Computer Graphics         
             ----------------------------------------
-Elad.gershon, ID: 312320716 and nastya.a, ID: 206218133
+Elad.gershon, ID:  and nastya.a, ID: 
 
 
 List of sites we used:
