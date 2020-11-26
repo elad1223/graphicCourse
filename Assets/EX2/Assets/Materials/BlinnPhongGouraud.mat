@@ -25,3 +25,4 @@ Material:
     - _AmbientColor: {r: 0.05, g: 0.13, b: 0.25, a: 1}
     - _DiffuseColor: {r: 0.14, g: 0.43, b: 0.84, a: 1}
     - _SpecularColor: {r: 0.7, g: 0.7, b: 0.7, a: 1}
+  m_BuildTextureStacks: []
