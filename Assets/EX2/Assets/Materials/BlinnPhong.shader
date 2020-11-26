@@ -1,4 +1,4 @@
-﻿Shader "CG/BlinnPhong"
+Shader "CG/BlinnPhong"
 {
     Properties
     {

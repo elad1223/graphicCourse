@@ -1,4 +1,4 @@
-﻿Shader "CG/BlinnPhongGouraud"
+Shader "CG/BlinnPhongGouraud"
 {
     Properties
     {
