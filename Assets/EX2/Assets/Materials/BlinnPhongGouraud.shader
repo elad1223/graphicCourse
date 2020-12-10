@@ -50,7 +50,7 @@ Shader "CG/BlinnPhongGouraud"
                     float3 lightDirection = normalize(_WorldSpaceLightPos0);
                     float3 surfaceNormal = normalize(mul(input.normal, unity_WorldToObject));
                     // the position of the vertex in the world coordinates
-                    float3 worldPos = mul(unity_ObjectToWorld, input.vertex).xyz;
+                    float3 worldPos = normalize(mul(unity_ObjectToWorld, input.vertex).xyz);
                     float3 viewPoint = normalize(_WorldSpaceCameraPos - worldPos);
                     // calculate the halfway vector used in the Blinn-Phong model
                     float3 halfway = normalize(lightDirection + viewPoint);

@@ -37,8 +37,8 @@ Shader "CG/BlinnPhong"
                 struct v2f
                 {
                     float4 pos : SV_POSITION;
-                    float3 normal : NORMAL;
-                    float3 worldPos : TEXCOORD0;
+                    float3 normal : TEXCOORD0;
+                    float3 worldPos : TEXCOORD1;
                 };
 
 
