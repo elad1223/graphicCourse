@@ -26,52 +26,79 @@ public static class CatmullClark
         meshData.facePoints = GetFacePoints(meshData);
         meshData.edgePoints = GetEdgePoints(meshData);
         meshData.newPoints = GetNewPoints(meshData);
+        
         // Combine facePoints, edgePoints and newPoints into a subdivided QuadMeshData
-
         List<Vector4> quads = new List<Vector4>();
         Dictionary<Vector2, Vector4> semi_quad = new Dictionary<Vector2, Vector4>();
-        int vertexNumber = meshData.newPoints.Count,
-            edgeNumber = meshData.edges.Count;
-        for (int edge_index = 0; edge_index < meshData.edges.Count; edge_index++)
-        {
-            int vertex_index1 = (int)meshData.edges[edge_index].x,
-                vertex_index2 = (int)meshData.edges[edge_index].y,
-                face_index1 = (int)meshData.edges[edge_index].z,
-                face_index2 = (int)meshData.edges[edge_index].w;
-            add_to_dict(ref semi_quad, true, vertexNumber, edgeNumber, vertex_index1, edge_index, face_index1);
-            add_to_dict(ref semi_quad, false, vertexNumber, edgeNumber, vertex_index2, edge_index, face_index1);
-            add_to_dict(ref semi_quad, false,vertexNumber, edgeNumber, vertex_index1, edge_index, face_index2);
-            add_to_dict(ref semi_quad, true,vertexNumber, edgeNumber, vertex_index2, edge_index, face_index2);
-        }
-        foreach (Vector4 quad in semi_quad.Values) quads.Add(quad);
+        int verticesCount = meshData.newPoints.Count,
+            edgesCount = meshData.edges.Count;
 
         List<Vector3> allPoint = new List<Vector3>();
         allPoint.AddRange(meshData.newPoints);
         allPoint.AddRange(meshData.edgePoints);
         allPoint.AddRange(meshData.facePoints);
-        Debug.Log(quads.Count);
 
-        return new QuadMeshData(allPoint,quads);
+        // go over each original edge and create the new quads that will be the result of
+        // the current subdivision. Add each new quad to the dictionary while checking
+        // that the vertex order is as expected (meaning not missing quads for a certein
+        // edge due to incorrect vertex order).
+        for (int edge_index = 0; edge_index < meshData.edges.Count; edge_index++)
+        {
+            int vertex_index_1 = (int)meshData.edges[edge_index].x,
+                vertex_index_2 = (int)meshData.edges[edge_index].y,
+                face_index_1 = (int)meshData.edges[edge_index].z,
+                face_index_2 = (int)meshData.edges[edge_index].w;
+            add_to_dict(ref semi_quad, true, verticesCount, edgesCount, vertex_index_1, edge_index, face_index_1);
+            add_to_dict(ref semi_quad, false, verticesCount, edgesCount, vertex_index_2, edge_index, face_index_1);
+            add_to_dict(ref semi_quad, false, verticesCount, edgesCount, vertex_index_1, edge_index, face_index_2);
+            add_to_dict(ref semi_quad, true, verticesCount, edgesCount, vertex_index_2, edge_index, face_index_2);
+        }
+        foreach (Vector4 quad in semi_quad.Values)
+        {
+            quads.Add(quad);
+        }
+
+        return new QuadMeshData(allPoint, quads);
     }
-    public static void add_to_dict(ref Dictionary<Vector2,Vector4> semi_quad,
-        bool clockwise,int vertexNumber,int edgeNumber,int vertex,int edge,int face)
+    /// <summary>
+    /// A method that adds new faces (according to the subdivision) to a dictionary
+    /// of quads that is passed to it.
+    /// </summary>
+    /// <param name="semi_quads"> a dictionary of the new quads that have already been 'found' </param>
+    /// <param name="clockwise"> a boolean flag that is set to true if the given points 
+    ///                          create a face in a clockwise order </param>
+    /// <param name="verticesCount"> the amount of vertices after the division </param>
+    /// <param name="edgesCount"> the amount of edges in the current shape </param>
+    /// <param name="vertex"> the index of the vertex we create the quad from </param>
+    /// <param name="edge"> the index of the edge we create the quad from </param>
+    /// <param name="face"> the index of the face we create the quad on </param>
+    public static void add_to_dict(ref Dictionary<Vector2,Vector4> semi_quads,
+        bool clockwise, int verticesCount, int edgesCount, int vertex, int edge, int face)
     {
         Vector2 key = new Vector2(vertex, face);
-        if (semi_quad.ContainsKey(key))
+        if (semi_quads.ContainsKey(key))
         {
-            semi_quad[key]=new Vector4(semi_quad[key].x, semi_quad[key].y,
-                semi_quad[key].z, vertexNumber + edge);
+            semi_quads[key] = 
+                new Vector4(semi_quads[key].x, semi_quads[key].y, semi_quads[key].z, verticesCount + edge);
         }
         else
         {
-            if(clockwise)
-            semi_quad[key] = new Vector4(vertex, edge + vertexNumber,
-                vertexNumber + edgeNumber + face, -1);
+            if (clockwise)
+            {
+                semi_quads[key] = 
+                    new Vector4(vertex, verticesCount + edge, verticesCount + edgesCount + face, -1);
+            }
             else
-                semi_quad[key] = new Vector4(vertexNumber + edgeNumber + face, edge + vertexNumber,
-                vertex, -1);
+            {
+                semi_quads[key] = 
+                    new Vector4(verticesCount + edgesCount + face, verticesCount + edge, vertex, -1);
+            }
         }
     }
+
+    // create specific comparer implemintation the maps the vector2 that is compared
+    // using hash code that is calcultaed by prime multiplication ( in order to get
+    // less crashes when adding new valus to the hash map).
     public class Vec2Comparer : EqualityComparer<Vector2>
     {
         private static int PRIME = 31;
@@ -81,7 +108,7 @@ public static class CatmullClark
         }
         public override int GetHashCode(Vector2 obj)
         {
-            return (int)(obj.x+obj.y)*PRIME;
+            return (int)(obj.x + obj.y) * PRIME;
         }
     }
 
@@ -98,17 +125,28 @@ public static class CatmullClark
             Vector4 face = mesh.faces[index];
             for (int i = 0; i < 4; i++)
             {
-                int index_vertex = (int)face[i], index_vertex2 = (int)face[(i + 1) % 4];
+                int index_vertex = (int)face[i],
+                    index_vertex2 = (int)face[(i + 1) % 4];
                 Vector2 key = new Vector2(index_vertex, index_vertex2);
+                // if the edge was already foung in another face we add the new face that
+                // is connected to it (edge = (p1, p2, f1, f2)), otherwise we create a new edge.
+                // we use a two-dim vector because the vertices don't change
                 if (edges_dict.ContainsKey(key))
+                {
                     edges_dict[key] = new Vector2(edges_dict[key].x, index);
+                }
                 else
+                {
                     edges_dict[key] = new Vector2(index, -1);
+                }
             }
         }
+
         List<Vector4> edges = new List<Vector4>();
         foreach (Vector2 key in edges_dict.Keys)
+        {
             edges.Add(new Vector4(key.x, key.y, edges_dict[key].x, edges_dict[key].y));
+        }
         return edges;
     }
 
@@ -133,11 +171,15 @@ public static class CatmullClark
         {
             Vector4 edge = mesh.edges[i];
             if (edge.w != -1)
-                edgePoints.Add((mesh.points[(int)edge.x] + mesh.points[(int)edge.y] + //vertex
-                    mesh.facePoints[(int)edge.z] + mesh.facePoints[(int)edge.w]) / 4); //facesPoints
+            {
+                edgePoints.Add((mesh.points[(int) edge.x] + mesh.points[(int) edge.y] + //vertex
+                                mesh.facePoints[(int) edge.z] + mesh.facePoints[(int) edge.w]) / 4); //facesPoints
+            }
             else
-                edgePoints.Add((mesh.points[(int)edge.x] + mesh.points[(int)edge.y] + //vertex
-                    mesh.facePoints[(int)edge.z]) / 3); //facesPoints
+            {
+                edgePoints.Add((mesh.points[(int) edge.x] + mesh.points[(int) edge.y] + //vertex
+                                mesh.facePoints[(int) edge.z]) / 3); //facesPoints
+            }
         }
         return edgePoints;
     }
@@ -155,25 +197,27 @@ public static class CatmullClark
             for (int edge_index = 0; edge_index < mesh.edges.Count; edge_index++)
             {
                 Vector4 edge = mesh.edges[edge_index];
-                if ((int)edge.x != index && (int)edge.y != index) continue;
+                if ((int) edge.x != index && (int) edge.y != index) continue;
 
-                r += (mesh.points[(int)edge.x] + mesh.points[(int)edge.y])/2;
+                r += (mesh.points[(int) edge.x] + mesh.points[(int) edge.y]) / 2;
 
-                int edge_int = (int)edge.z;
-                if (!face_indecies.Contains(edge_int)) { 
+                int edge_int = (int) edge.z;
+                if (! face_indecies.Contains(edge_int))
+                { 
                     face_indecies.Add(edge_int);
                     f += mesh.facePoints[edge_int];
                 }
-                edge_int = (int)edge.w;
-                if (!face_indecies.Contains(edge_int))
+                edge_int = (int) edge.w;
+                if (! face_indecies.Contains(edge_int))
                 {
                     face_indecies.Add(edge_int);
                     f += mesh.facePoints[edge_int];
                 }
             }
             int n = face_indecies.Count;
-            f /= n;r /= n;
-            newPoints.Add((f+2*r+(n-3)*p)/n);
+            f /= n; 
+            r /= n;
+            newPoints.Add((f + 2 * r + (n - 3) * p) / n);
         }
         return newPoints;
     }
