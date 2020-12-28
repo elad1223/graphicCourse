@@ -21,7 +21,11 @@ struct bumpMapData
 float2 getSphericalUV(float3 pos)
 {
     // Your implementation
-    return 0;
+    float2 uv;
+    pos = normalize(pos);
+    uv.x = atan2(pos.z, pos.x) / (2*PI); 
+    uv.y = (0.5 + (asin(pos.y) / PI));
+    return uv;
 }
 
 // Implements an adjusted version of the Blinn-Phong lighting model

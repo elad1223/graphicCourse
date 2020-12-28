@@ -43,18 +43,34 @@
                 struct v2f
                 {
                     float4 pos : SV_POSITION;
+                    float3 position : COORD0;
                 };
 
                 v2f vert (appdata input)
                 {
                     v2f output;
                     output.pos = UnityObjectToClipPos(input.vertex);
+                    output.position = input.vertex.xyz;
                     return output;
                 }
 
-                fixed4 frag (v2f input) : SV_Target
+                fixed4 frag(v2f input) : SV_Target
                 {
-                    return 1;
+                    float2 uv = getSphericalUV(input.position);
+                    float3 viewPoint = normalize(_WorldSpaceCameraPos - input.position);
+                    float normal = normalize(input.position);
+                    bumpMapData bmd;
+                    bmd.normal = normal;
+                    bmd.tangent = cross(normal,(0,1,0));
+                    bmd.uv = uv;
+                    bmd.heightMap = _HeightMap;
+                    bmd.du = _HeightMap_TexelSize[0];
+                    bmd.dv = _HeightMap_TexelSize[1];
+                    bmd.bumpScale = _BumpScale / 10000;
+                    float3 normal_h = getBumpMappedNormal(bmd);
+                    return float4(blinnPhong(normal_h, viewPoint, _WorldSpaceLightPos0,
+                        _Shininess, tex2D(_AlbedoMap, uv), tex2D(_SpecularMap, uv), _Ambient), 1);
+                        
                 }
 
             ENDCG
