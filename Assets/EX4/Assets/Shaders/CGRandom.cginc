@@ -72,8 +72,14 @@ float triquinticInterpolation(float3 v[8], float3 t)
 // Returns the value of a 2D value noise function at the given coordinates c
 float value2d(float2 c)
 {
+    float2 array[4];
+    float2 left_corner = float2(c.x - frac(c.x), c.y - frac(c.y));
+    array[0] = random2(left_corner)[0];
+    array[1] = random2(left_corner + fixed2(1,0))[0];
+    array[2] = random2(left_corner + fixed2(0, 1))[0];
+    array[3] = random2(left_corner + fixed2(1, 1))[0];
     // Your implementation
-    return 0;
+    return bicubicInterpolation(array,c)*2-1;
 }
 
 // Returns the value of a 2D Perlin noise function at the given coordinates c

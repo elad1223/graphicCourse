@@ -28,14 +28,24 @@ float2 getSphericalUV(float3 pos)
 fixed3 blinnPhong(float3 n, float3 v, float3 l, float shininess, fixed4 albedo, fixed4 specularity, float ambientIntensity)
 {
     // Your implementation
-    return 0;
+    fixed4 ambientC = ambientIntensity * albedo;
+    fixed4 diffuseC = max(0, dot(n, l)) * albedo;
+    fixed3 halfway = (l + v) / 2;
+    fixed4 specularC = pow(max(0, dot(n, halfway)), shininess) * specularity;
+    return ambientC + diffuseC + specularC;
 }
 
 // Returns the world-space bump-mapped normal for the given bumpMapData
 float3 getBumpMappedNormal(bumpMapData i)
 {
     // Your implementation
-    return 0;
+    float3 b = cross(i.normal, i.tangent);
+    float heightNormal = tex2D(i.heightMap, i.uv + fixed2(i.du, i.dv)).x;
+    float3 normal_h = mul(unity_ObjectToWorld, i.normal);
+    //heightNormal = normalize(heightNormal * 2 - 1);
+    float3 normal_bump = 
+        i.tangent * normal_h.x + i.normal * normal_h.z *i.bumpScale + b * normal_h.y;
+    return normalize(normal_bump);
 }
 
 
