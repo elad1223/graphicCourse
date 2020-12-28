@@ -48,7 +48,7 @@ Shader "CG/Bricks"
                     float4 pos : SV_POSITION;
                     float2 uv  : TEXCOORD0;
                     float3 normal : NORMAL;
-                    float4 tangent  : TANGENT;
+                    //float4 tangent  : TANGENT;
                 };
 
                 v2f vert (appdata input)
@@ -56,13 +56,6 @@ Shader "CG/Bricks"
                     v2f output;
                     output.pos = UnityObjectToClipPos(input.vertex);
                     output.uv = input.uv;
-                    output.normal = input.normal;// mul(unity_ObjectToWorld, input.normal);
-                    output.tangent = input.tangent;// mul(unity_ObjectToWorld, input.tangent);
-                    return output;
-                }
-
-                fixed4 frag(v2f input) : SV_Target
-                {
                     bumpMapData bmd;
                     bmd.normal = input.normal;
                     bmd.tangent = input.tangent.xyz;
@@ -73,9 +66,15 @@ Shader "CG/Bricks"
                     bmd.bumpScale = _BumpScale / 10000;
 
                     float3 normal_h = getBumpMappedNormal(bmd);
-                    normal_h = mul(unity_ObjectToWorld, normal_h);
+                    output.normal = normal_h;
+                    return output;
+                }
+
+                fixed4 frag(v2f input) : SV_Target
+                {                
+                    //normal_h = mul(unity_ObjectToWorld, normal_h);
                     float3 viewPoint = normalize(_WorldSpaceCameraPos - input.pos);
-                    return fixed4(blinnPhong(normal_h, viewPoint, _WorldSpaceLightPos0,
+                    return fixed4(blinnPhong(input.normal, viewPoint, _WorldSpaceLightPos0,
                         _Shininess,tex2D(_AlbedoMap,input.uv),tex2D(_SpecularMap, input.uv),_Ambient),1);
                     //return tex2D(_HeightMap, float2(bmd.du,bmd.dv)+input.uv);
                 }

@@ -44,7 +44,7 @@ float3 getBumpMappedNormal(bumpMapData i)
     float3 normal_h = mul(unity_ObjectToWorld, i.normal);
     //heightNormal = normalize(heightNormal * 2 - 1);
     float3 normal_bump = 
-        i.tangent * normal_h.x + i.normal * normal_h.z *i.bumpScale + b * normal_h.y;
+        i.tangent * normal_h.x + i.normal * normal_h.z * i.bumpScale + b * normal_h.y;
     return normalize(normal_bump);
 }
 
