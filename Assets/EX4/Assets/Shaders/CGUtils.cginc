@@ -31,7 +31,6 @@ float2 getSphericalUV(float3 pos)
 // Implements an adjusted version of the Blinn-Phong lighting model
 fixed3 blinnPhong(float3 n, float3 v, float3 l, float shininess, fixed4 albedo, fixed4 specularity, float ambientIntensity)
 {
-    // Your implementation
     fixed4 ambientC = ambientIntensity * albedo;
     fixed4 diffuseC = max(0, dot(n, l)) * albedo;
     fixed3 halfway = (l + v) / 2;

@@ -48,35 +48,37 @@ Shader "CG/Bricks"
                     float4 pos : SV_POSITION;
                     float2 uv  : TEXCOORD0;
                     float3 normal : NORMAL;
-                    //float4 tangent  : TANGENT;
+                    float4 tangent  : TANGENT;
                 };
 
                 v2f vert (appdata input)
                 {
                     v2f output;
-                    output.pos = UnityObjectToClipPos(input.vertex);
                     output.uv = input.uv;
+                    output.pos = UnityObjectToClipPos(input.vertex);
+                    output.normal = input.normal;
+                    output.tangent = input.tangent;
+                    return output;
+                }
+
+                fixed4 frag(v2f input) : SV_Target
+                {
+
+                    //normal_h = mul(unity_ObjectToWorld, normal_h);
+                    /*
                     bumpMapData bmd;
                     bmd.normal = input.normal;
                     bmd.tangent = input.tangent.xyz;
                     bmd.uv = input.uv;
                     bmd.heightMap = _HeightMap;
-                    bmd.du = _HeightMap_TexelSize[0];
-                    bmd.dv = _HeightMap_TexelSize[1];
+                    bmd.du = _HeightMap_TexelSize[2];
+                    bmd.dv = _HeightMap_TexelSize[3];
                     bmd.bumpScale = _BumpScale / 10000;
-
                     float3 normal_h = getBumpMappedNormal(bmd);
-                    output.normal = normal_h;
-                    return output;
-                }
-
-                fixed4 frag(v2f input) : SV_Target
-                {                
-                    //normal_h = mul(unity_ObjectToWorld, normal_h);
+                    */
                     float3 viewPoint = normalize(_WorldSpaceCameraPos - input.pos);
                     return fixed4(blinnPhong(input.normal, viewPoint, _WorldSpaceLightPos0,
                         _Shininess,tex2D(_AlbedoMap,input.uv),tex2D(_SpecularMap, input.uv),_Ambient),1);
-                    //return tex2D(_HeightMap, float2(bmd.du,bmd.dv)+input.uv);
                 }
 
             ENDCG

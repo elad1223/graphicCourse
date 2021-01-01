@@ -57,18 +57,21 @@
                 fixed4 frag(v2f input) : SV_Target
                 {
                     float2 uv = getSphericalUV(input.position);
-                    float3 viewPoint = normalize(_WorldSpaceCameraPos - input.position);
-                    float normal = normalize(input.position);
+                    //return  tex2D(_AlbedoMap, uv);
+                    float3 normal = normalize(input.position);
+                    float3 viewPoint = normalize(_WorldSpaceCameraPos - input.pos);
+                    /*
                     bumpMapData bmd;
                     bmd.normal = normal;
                     bmd.tangent = cross(normal,(0,1,0));
                     bmd.uv = uv;
                     bmd.heightMap = _HeightMap;
-                    bmd.du = _HeightMap_TexelSize[0];
-                    bmd.dv = _HeightMap_TexelSize[1];
+                    bmd.du = _HeightMap_TexelSize[2];
+                    bmd.dv = _HeightMap_TexelSize[3];
                     bmd.bumpScale = _BumpScale / 10000;
                     float3 normal_h = getBumpMappedNormal(bmd);
-                    return float4(blinnPhong(normal_h, viewPoint, _WorldSpaceLightPos0,
+                    */
+                    return fixed4(blinnPhong(normal, viewPoint, _WorldSpaceLightPos0,
                         _Shininess, tex2D(_AlbedoMap, uv), tex2D(_SpecularMap, uv), _Ambient), 1);
                         
                 }

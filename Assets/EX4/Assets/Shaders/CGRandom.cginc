@@ -57,43 +57,74 @@ float bicubicInterpolation(float2 v[4], float2 t)
 // at the given ratio t (a float2 with components between 0 and 1)
 float biquinticInterpolation(float2 v[4], float2 t)
 {
-    // Your implementation
-    return 0;
+    float2 u = t * t * t * (10.0 + t * (-15.0  + t * 6.0)); // Cubic interpolation
+
+   // Interpolate in the x direction
+    float x1 = lerp(v[0], v[1], u.x);
+    float x2 = lerp(v[2], v[3], u.x);
+
+    // Interpolate in the y direction and return
+    return lerp(x1, x2, u.y);
 }
 
 // Interpolates a given array v of 8 float3 values using triquintic interpolation
 // at the given ratio t (a float3 with components between 0 and 1)
+//       [4]=======[5]
+//     -  |       - |
+// [0]=====o==[1]   o
+//  |     |    |    |
+//  o    [6]===o===[7]
+//  |  -       | -
+// [2]=====o==[3]
+//
 float triquinticInterpolation(float3 v[8], float3 t)
 {
-    // Your implementation
-    return 0;
+    float3 u = t; //linear
+    float x1 = lerp(v[0], v[1], u.x);
+    float x2 = lerp(v[2], v[3], u.x);
+    float x3 = lerp(v[4], v[5], u.x);
+    float x4 = lerp(v[6], v[7], u.x);
+
+    float y1 = lerp(x1, x2, u.y);
+    float y2 = lerp(x3, x4, u.y);
+
+    return lerp(y1,y2,u.z);
 }
 
 // Returns the value of a 2D value noise function at the given coordinates c
 float value2d(float2 c)
 {
     float2 array[4];
-    float2 left_corner = float2(c.x - frac(c.x), c.y - frac(c.y));
-    array[0] = random2(left_corner)[0];
-    array[1] = random2(left_corner + fixed2(1,0))[0];
-    array[2] = random2(left_corner + fixed2(0, 1))[0];
-    array[3] = random2(left_corner + fixed2(1, 1))[0];
-    // Your implementation
-    return bicubicInterpolation(array,c)*2-1;
+    float2 left_bottom_corner = float2(floor(c.x), floor(c.y));
+    for (uint i = 0; i < 4; i++) 
+        array[i] = random2(left_bottom_corner + float2(fmod(i, 2), i / 2));
+    return bicubicInterpolation(array,float2(frac(c.x),frac(c.y)));
 }
 
 // Returns the value of a 2D Perlin noise function at the given coordinates c
 float perlin2d(float2 c)
 {
-    // Your implementation
-    return 0;
+    float2 array[4];
+    float2 left_corner = float2(floor(c.x), floor(c.y));
+    float2 temp;
+    for (uint i = 0; i < 4; i++) {
+        temp = left_corner + float2(fmod(i, 2), i/ 2);
+        array[i] = dot(random2(temp), temp - c);
+    }
+    return biquinticInterpolation(array, float2(frac(c.x), frac(c.y)));
 }
 
 // Returns the value of a 3D Perlin noise function at the given coordinates c
 float perlin3d(float3 c)
 {                    
-    // Your implementation
-    return 0;
+    float3 array[8];
+    float3 left_bottom_corner = float3(floor(c.x), floor(c.y),floor(c.z));
+    float3 temp;
+    for (uint i = 0; i < 8; i++) {
+        temp = left_bottom_corner + float3(fmod(i, 2), fmod(i / 2, 2), i / 4);
+        array[i] = dot(random3(temp), temp - c);
+    }
+    return triquinticInterpolation(array,float3(frac(c.x),frac(c.y),frac(c.z)));
 }
 
 
