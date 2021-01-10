@@ -57,7 +57,7 @@ float bicubicInterpolation(float2 v[4], float2 t)
 // at the given ratio t (a float2 with components between 0 and 1)
 float biquinticInterpolation(float2 v[4], float2 t)
 {
-    float2 u = t * t * t * (10.0 + t * (-15.0  + t * 6.0)); // Cubic interpolation
+    float2 u = t * t * t * (10.0 - 15.0 * t  + 6.0 * t * t); // Cubic interpolation
 
    // Interpolate in the x direction
     float x1 = lerp(v[0], v[1], u.x);
@@ -79,7 +79,7 @@ float biquinticInterpolation(float2 v[4], float2 t)
 //
 float triquinticInterpolation(float3 v[8], float3 t)
 {
-    float3 u = t; //linear
+    float3 u = t * t * (3.0 - 2.0 * t); //linear
     float x1 = lerp(v[0], v[1], u.x);
     float x2 = lerp(v[2], v[3], u.x);
     float x3 = lerp(v[4], v[5], u.x);
@@ -124,7 +124,7 @@ float perlin3d(float3 c)
         temp = left_bottom_corner + float3(fmod(i, 2), fmod(i / 2, 2), i / 4);
         array[i] = dot(random3(temp), temp - c);
     }
-    return triquinticInterpolation(array,float3(frac(c.x),frac(c.y),frac(c.z)));
+    return triquinticInterpolation(array, float3(frac(c.x), frac(c.y), frac(c.z)));
 }
 
 
