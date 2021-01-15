@@ -40,18 +40,28 @@ RayHit intersectScene(Ray ray)
         return intersectScene0(ray);
     }
 }
-
+float directionToLight(RayHit hit) {
+    float3 directionLight = normalize(hit.position - _DirectionalLight.xyz);
+    Ray rayLight = CreateRay(hit.position + EPS * hit.normal, directionLight, 1);
+    RayHit hit1 = intersectScene(rayLight);
+    if (isinf(hit1.distance))
+        return 1;
+    return 0;
+}
 // Returns the color associated with the given ray and hit point 
 float3 shadeHit(Ray ray, RayHit hit)
-{
-    return 1;
+{   
+    return directionToLight(hit);
+        //* blinnPhong(hit.normal, ray.direction,
+        //_DirectionalLight.xyz, 50, hit.material.albedo);
 }
+
 
 // Returns the color associated with the given ray that has missed all geometry
 float3 shadeMiss(Ray ray)
 {
     // Your implementation
-    return 0;
+    return sampleSkybox(ray.direction.xyz);
 }
 
 // Traces the given ray in the currently selected scene
@@ -61,7 +71,7 @@ float3 trace(inout Ray ray)
 {
     RayHit hit = intersectScene(ray);
     if (isinf(hit.distance))
-        return 0;
+        return shadeMiss(ray) * ray.energy;
     return shadeHit(ray, hit) * ray.energy;
     // Your implementation
     //return 0;
