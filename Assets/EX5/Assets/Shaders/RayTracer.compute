@@ -45,15 +45,13 @@ RayHit intersectScene(Ray ray)
 // Returns the color associated with the given ray and hit point 
 float3 shadeHit(Ray ray, RayHit hit)
 {
-    float3 shadowRayDirection = normalize(hit.position - _DirectionalLight.xyz);
+    float3 shadowRayDirection = normalize( - _DirectionalLight.xyz);
     Ray shadowRay = CreateRay(hit.position + EPS * hit.normal, shadowRayDirection, 1);
     RayHit secondHit = intersectScene(shadowRay);
-    float color = 0;
-    if (isinf(secondHit.distance)) {
-        color = 1;
-    }
+    float color = isinf(secondHit.distance);
+    
 
-    return 1 * blinnPhong(hit.normal, -ray.direction, -_DirectionalLight.xyz, 50, hit.material.albedo);
+    return color * blinnPhong(hit.normal, -ray.direction, -_DirectionalLight.xyz, 50, hit.material.albedo);
 }
 
 

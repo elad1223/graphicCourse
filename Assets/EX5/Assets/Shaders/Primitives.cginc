@@ -15,7 +15,7 @@ void intersectSphere(Ray ray, inout RayHit bestHit, Material material, float4 sp
         if (t1 > 0) {
             t0 = t1;
         }
-        if (bestHit.distance > (t0 / 2)) {
+        if (bestHit.distance > (t0 / 2) && t0>=0) {
             bestHit.distance = (t0 / 2);
             bestHit.position = ray.origin + ray.direction * bestHit.distance;
             bestHit.normal = normalize(bestHit.position - sphere.xyz);
@@ -73,7 +73,8 @@ void intersectTriangle(Ray ray, inout RayHit bestHit, Material material, float3 
     if (dot(cross(b - a, position - a), normal) >= 0 &&
         dot(cross(c - b, position - b), normal) >= 0 &&
         dot(cross(a - c, position - c), normal) >= 0 &&
-        bestHit.distance > t) {
+        bestHit.distance > t &&
+        t>=0) {
 
         bestHit.distance = t;
         bestHit.position = position;

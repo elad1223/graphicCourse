@@ -10,7 +10,7 @@ float3 blinnPhong(float3 n, float3 v, float3 l, float shininess, float3 albedo)
 // Reflects the given ray from the given hit point
 void reflectRay(inout Ray ray, RayHit hit)
 {
-    ray.origin = hit.position;
+    ray.origin = hit.position+ hit.normal* EPS;
     ray.direction = 2 * dot(-ray.direction, hit.normal) * hit.normal + ray.direction;
     ray.energy *= hit.material.specular;
 }
