@@ -36,31 +36,30 @@ RayHit intersectScene(Ray ray)
         return intersectScene3(ray);
     case 4:
         return intersectScene4(ray);
+    case 5:
+        return intersectScene5(ray);
     default:
         return intersectScene0(ray);
     }
 }
-float directionToLight(RayHit hit) {
-    float3 directionLight = normalize(hit.position - _DirectionalLight.xyz);
-    Ray rayLight = CreateRay(hit.position + EPS * hit.normal, directionLight, 1);
-    RayHit hit1 = intersectScene(rayLight);
-    if (isinf(hit1.distance))
-        return 1;
-    return 0;
-}
 // Returns the color associated with the given ray and hit point 
 float3 shadeHit(Ray ray, RayHit hit)
-{   
-    return directionToLight(hit);
-        //* blinnPhong(hit.normal, ray.direction,
-        //_DirectionalLight.xyz, 50, hit.material.albedo);
+{
+    float3 shadowRayDirection = normalize(hit.position - _DirectionalLight.xyz);
+    Ray shadowRay = CreateRay(hit.position + EPS * hit.normal, shadowRayDirection, 1);
+    RayHit secondHit = intersectScene(shadowRay);
+    float color = 0;
+    if (isinf(secondHit.distance)) {
+        color = 1;
+    }
+
+    return 1 * blinnPhong(hit.normal, -ray.direction, -_DirectionalLight.xyz, 50, hit.material.albedo);
 }
 
 
 // Returns the color associated with the given ray that has missed all geometry
 float3 shadeMiss(Ray ray)
 {
-    // Your implementation
     return sampleSkybox(ray.direction.xyz);
 }
 
@@ -70,11 +69,14 @@ float3 shadeMiss(Ray ray)
 float3 trace(inout Ray ray)
 {
     RayHit hit = intersectScene(ray);
-    if (isinf(hit.distance))
-        return shadeMiss(ray) * ray.energy;
-    return shadeHit(ray, hit) * ray.energy;
-    // Your implementation
-    //return 0;
+    if (isinf(hit.distance)) {
+        float3 value = shadeMiss(ray) * ray.energy;
+        ray.energy = 0;
+        return value;
+    }
+    float3 value = shadeHit(ray, hit)* ray.energy;
+    reflectRay(ray, hit);
+    return value;
 }
 
 // Creates and traces a view ray for each image pixel, then sets the
@@ -92,7 +94,11 @@ void CSMain (uint3 id : SV_DispatchThreadID)
 
     // Create a view ray and trace it
     Ray ray = CreateViewRay(uv);
-    float3 result = trace(ray);
+    float3 result = 0;
+    for (int i = 0; i < _BounceLimit; i++) {
+        result += trace(ray);
+        if (!any(ray.energy)) break;
+    }
     
     // Set pixel color
     Result[id.xy] = float4(result, 1);

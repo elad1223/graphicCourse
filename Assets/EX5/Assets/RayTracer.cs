@@ -8,7 +8,8 @@ using UnityEngine;
     scene1,
     scene2,
     scene3,
-    scene4
+    scene4,
+    scene5
  };
 
 
