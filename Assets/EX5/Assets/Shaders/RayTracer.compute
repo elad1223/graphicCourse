@@ -74,8 +74,15 @@ float3 trace(inout Ray ray)
         ray.energy = 0;
         return value;
     }
-    float3 value = shadeHit(ray, hit)* ray.energy;
-    reflectRay(ray, hit);
+    float3 value = shadeHit(ray, hit) * ray.energy;
+    //reflectRay(ray, hit);
+    if (hit.material.refractiveIndex == -1) {
+        // material is reflective
+        reflectRay(ray, hit);
+    }
+    else {
+        refractRay(ray, hit);
+    }
     return value;
 }
 

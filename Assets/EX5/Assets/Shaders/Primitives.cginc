@@ -2,6 +2,7 @@
 // The sphere center is given by sphere.xyz and its radius is sphere.w
 void intersectSphere(Ray ray, inout RayHit bestHit, Material material, float4 sphere)
 {
+    ray.direction = normalize(ray.direction);
     float3 origin_center = (ray.origin - sphere.xyz);
     float A = 1;
     float B = 2 * dot(origin_center, ray.direction);
@@ -14,7 +15,7 @@ void intersectSphere(Ray ray, inout RayHit bestHit, Material material, float4 sp
         if (t1 > 0) {
             t0 = t1;
         }
-        if (t0 > 0 && bestHit.distance>(t0/2)) {
+        if (bestHit.distance > (t0 / 2)) {
             bestHit.distance = (t0 / 2);
             bestHit.position = ray.origin + ray.direction * bestHit.distance;
             bestHit.normal = normalize(bestHit.position - sphere.xyz);
@@ -27,6 +28,7 @@ void intersectSphere(Ray ray, inout RayHit bestHit, Material material, float4 sp
 // The plane passes through point c and has a surface normal n
 void intersectPlane(Ray ray, inout RayHit bestHit, Material material, float3 c, float3 n)
 {
+    ray.direction = normalize(ray.direction);
     float nDir = dot(ray.direction, n);
     if (nDir < 0 && bestHit.distance > -dot((ray.origin - c), n) / nDir) {
         bestHit.distance = -dot((ray.origin - c), n)/nDir;
@@ -41,6 +43,7 @@ void intersectPlane(Ray ray, inout RayHit bestHit, Material material, float3 c, 
 // The material returned is either m1 or m2 in a way that creates a checkerboard pattern 
 void intersectPlaneCheckered(Ray ray, inout RayHit bestHit, Material m1, Material m2, float3 c, float3 n)
 {
+    ray.direction = normalize(ray.direction);
     float nDir = dot(ray.direction, n);
     if (nDir < 0 && bestHit.distance > -dot((ray.origin - c), n) / nDir) {
         bestHit.distance = -dot((ray.origin - c), n) / nDir;
@@ -65,12 +68,12 @@ void intersectTriangle(Ray ray, inout RayHit bestHit, Material material, float3 
 {
     float3 normal = normalize(cross(a - c, b - c));
     float nDir = dot(ray.direction, normal);
-    float t = -dot((ray.origin - c), normal) / nDir;
+    float t = (-dot((ray.origin - c), normal)) / nDir;
     float3 position = ray.origin + ray.direction * t;
     if (dot(cross(b - a, position - a), normal) >= 0 &&
         dot(cross(c - b, position - b), normal) >= 0 &&
         dot(cross(a - c, position - c), normal) >= 0 &&
-        bestHit.distance>t) {
+        bestHit.distance > t) {
 
         bestHit.distance = t;
         bestHit.position = position;
@@ -90,7 +93,7 @@ void intersectCircle(Ray ray, inout RayHit bestHit, Material material, float4 ci
     float B = 2 * dot(origin_center, ray.direction);
     float C = dot(origin_center, origin_center) - circle.w * circle.w;
     float D = B * B - 4 * C;
-    if (D >= 0 && nDir<0 &&
+    if (D >= 0 && nDir < 0 &&
         bestHit.distance > -dot((ray.origin - circle.xyz), n) / nDir) {
         bestHit.distance = -dot((ray.origin - circle.xyz), n) / nDir;//(min(abs(-B + sqrt(D)), abs(-B - sqrt(D)))) / 2;
         bestHit.position = ray.origin + ray.direction * bestHit.distance;
@@ -104,6 +107,38 @@ void intersectCircle(Ray ray, inout RayHit bestHit, Material material, float4 ci
 // The cylinder center is given by cylinder.xyz, its radius is cylinder.w and its height is h
 void intersectCylinderY(Ray ray, inout RayHit bestHit, Material material, float4 cylinder, float h)
 {
+    float4 topCircle = cylinder;
+    topCircle.y = cylinder.y + 0.5 * h;
+    float4 bottomCircle = cylinder;
+    bottomCircle.y = cylinder.y - 0.5 * h;
+    float3 circleNormal = float3(0.0, 0.5, 0.0);  // need to find correct oriantation
+
+    float A = (ray.direction.x * ray.direction.x) + (ray.direction.z * ray.direction.z);
+    float B = 2 * ((ray.origin.x - cylinder.x) * ray.direction.x +
+        (ray.origin.z - cylinder.z) * ray.direction.z);
+    float C = ((ray.origin.x - cylinder.x) * (ray.origin.x - cylinder.x)) +
+        ((ray.origin.z - cylinder.z) * (ray.origin.z - cylinder.z)) - (cylinder.w * cylinder.w);
+    float D = B * B - (4 * A * C);
+    if (D >= 0) {
+        float sqrtD = sqrt(D);
+        float t0 = -B + sqrtD;
+        float t1 = -B - sqrtD;
+        if (t1 > 0) {
+            t0 = t1;
+        }
+        float3 position = ray.origin + ray.direction * t0;
+        if ((position.y >= bottomCircle.y) && (position.y <= topCircle.y)) {
+
+            bestHit.distance = (t0 / 2);
+            bestHit.position = ray.origin + ray.direction * bestHit.distance;
+            bestHit.normal = normalize(bestHit.position - cylinder.xyz);
+            bestHit.material = material;
+        }
+    }
+    intersectCircle(ray, bestHit, material, topCircle, circleNormal);
+    intersectCircle(ray, bestHit, material, bottomCircle, circleNormal);
+
+    /*
     //float3 origin_center_y = float3(0,ray.origin.y - cylinder.y,0);
     ray.direction = normalize(ray.direction);
     //float3 ray_y = float3(0, ray.direction.y, 0);
@@ -134,5 +169,6 @@ void intersectCylinderY(Ray ray, inout RayHit bestHit, Material material, float4
             bestHit.normal = normalize(bestHit.position - cylinder.xyz);
             bestHit.material = material;
         }
-    }
+       
+    }*/
 }
