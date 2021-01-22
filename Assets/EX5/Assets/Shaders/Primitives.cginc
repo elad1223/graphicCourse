@@ -84,8 +84,8 @@ void intersectPlaneCheckered(Ray ray, inout RayHit bestHit, Material m1, Materia
         float2 left_bottom_corner = float2(floor(bestHit.position.x), floor(bestHit.position.z));
         for (uint i = 0; i < 4; i++)
             array[i] = checkerPlane(m1,m2,left_bottom_corner + float2(i%2, i / 2));
-        bestHit.material= bicubicInterpolation(array, float2(frac(bestHit.position.x), frac(bestHit.position.z)));
-      
+        //bestHit.material= bicubicInterpolation(array, float2(frac(bestHit.position.x), frac(bestHit.position.z)));
+        bestHit.material = checkerPlane(m1, m2, float2(bestHit.position.x, bestHit.position.z));
     }
 }
 
