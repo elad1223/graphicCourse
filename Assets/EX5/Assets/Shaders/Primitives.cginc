@@ -53,21 +53,22 @@ Material metiralLarp(Material m1, Material m2, float t) {
 //         |
 // [2]=====o==[3]
 //
-Material bicubicInterpolation(Material v[4], float2 t)
+Material bicubicInterpolation(Material v[4], float3 t,float3 normal)
 {
-    float2 u = t; 
-    // Interpolate in the x direction
-    Material x1 = metiralLarp(v[0], v[1], u.x);
-    Material x2 = metiralLarp(v[2], v[3], u.x);
+    float3 u = floor(2 * t * (1-normal)); 
+    int index = 0;
+    if (normal[index] == 1)index++;
+    // Interpolate in the x/y direction
 
-    // Interpolate in the y direction and return
-    return metiralLarp(x1, x2, u.y);
+    Material x1 = metiralLarp(v[0], v[1], u[index]);
+    Material x2 = metiralLarp(v[2], v[3], u[index]);
+    index++;
+    if (normal[index] == 1)index++;
+    
+    // Interpolate in the y/z direction and return
+    return metiralLarp(x1, x2, u[index]);
 }
-Material checkerPlane(Material m1, Material m2, float2 position) {
-    if ((floor(2 * position.x) + floor(2 * position.y)) % 2 == 0)
-        return m1;
-    return m2;
-}
+
 // Checks for an intersection between a ray and a plane
 // The plane passes through point c and has a surface normal n
 // The material returned is either m1 or m2 in a way that creates a checkerboard pattern 
@@ -80,12 +81,12 @@ void intersectPlaneCheckered(Ray ray, inout RayHit bestHit, Material m1, Materia
         bestHit.position = ray.origin + ray.direction * bestHit.distance;
         bestHit.normal = n;
         
-        Material array[4];
-        float2 left_bottom_corner = float2(floor(bestHit.position.x), floor(bestHit.position.z));
-        for (uint i = 0; i < 4; i++)
-            array[i] = checkerPlane(m1,m2,left_bottom_corner + float2(i%2, i / 2));
-        //bestHit.material= bicubicInterpolation(array, float2(frac(bestHit.position.x), frac(bestHit.position.z)));
-        bestHit.material = checkerPlane(m1, m2, float2(bestHit.position.x, bestHit.position.z));
+        Material array[4];        
+        array[2] = array[1] = m1;
+        array[0] = array[3] = m2;
+         
+        bestHit.material= bicubicInterpolation(array, frac(bestHit.position),n);
+        
     }
 }
 
