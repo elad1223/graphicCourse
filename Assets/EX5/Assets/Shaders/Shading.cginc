@@ -18,16 +18,16 @@ void reflectRay(inout Ray ray, RayHit hit)
 // Refracts the given ray from the given hit point
 void refractRay(inout Ray ray, RayHit hit)
 {
-    ray.origin = hit.position;
     float refractionDirection = dot(hit.normal, ray.direction);
     float refractCoefficient = 1 / hit.material.refractiveIndex;
     if (refractionDirection > 0) {
         hit.normal = - hit.normal;
         refractCoefficient = 1 / refractCoefficient;
     }
+    ray.origin = hit.position - EPS * hit.normal;
     float c1 = abs(refractionDirection);
-    float c2 = sqrt(1 - (1 - (c1 * c1)));
-    float t = refractCoefficient * ray.direction + (refractCoefficient * c1 - c2) * hit.normal;
+    float c2 = sqrt(1 - ((refractCoefficient * refractCoefficient) * (1 - (c1 * c1))));
+    float3 t = refractCoefficient * ray.direction + (refractCoefficient * c1 - c2) * hit.normal;
     ray.direction = t;
 }
 
